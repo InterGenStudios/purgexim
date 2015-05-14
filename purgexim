@@ -1,0 +1,80 @@
+#!/bin/bash
+# purgexim - Simple cPanel server script to remove the exim queue
+# Intergen 4/12/15
+# ---------------------------------------------------------------
+
+function SEPARATOR {
+echo
+tput bold
+tput setaf 4
+echo  --------------------------------
+echo
+}
+clear
+tput bold
+tput setaf 2
+echo Stopping Exim...
+sleep 1
+tput sgr0
+service exim stop &&
+SEPARATOR
+tput bold
+tput setaf 2
+echo Moving Exim Queue Out of Exim...
+sleep 1
+mv /var/spool/exim /var/spool/exim.bak &&
+SEPARATOR
+tput bold
+tput setaf 2
+echo Restarting Exim...
+sleep 1
+tput sgr0
+service exim start &&
+SEPARATOR
+tput bold
+tput setaf 3
+echo Purging Exim Queue
+sleep 1
+echo
+echo This may take awhile...
+sleep 1
+rm -rf /var/spool/exim &&
+SEPARATOR
+tput bold
+tput setaf 2
+echo Exim Queue Purge Complete
+sleep 2
+echo
+tput bold
+tput setaf 3
+echo Checking for immediate Exim Queue buildup
+sleep 1
+echo \(Immediate buildup may indicate further SPAM cleaup is required\)
+sleep 3
+SEPARATOR
+count=10
+while [ $count -gt 0 ]; do
+    echo
+    tput bold
+    tput setaf 3
+    echo Current Exim Queue Size: $(exim -bpc)
+    let count=count-1
+    SEPARATOR
+    sleep 2
+done
+QUEUE=$(exim -bpc)
+if [ $QUEUE = 0 ]; then
+    echo
+    tput bold
+    tput setaf 2
+    echo Exim Queue appears to be stable, no further action is required
+    SEPARATOR
+    exit 0
+else
+    echo
+    tput bold
+    tput setaf 1
+    echo Exim Queue grew immediately.  Futher SPAM cleanup is required.
+    SEPARATOR
+    exit 0
+fi
