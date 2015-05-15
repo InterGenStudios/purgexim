@@ -53,29 +53,36 @@ echo \(Immediate buildup may indicate further SPAM cleaup is required\)
 sleep 3
 SEPARATOR
 count=10
+queuecheck=0
 while [ $count -gt 0 ]; do
     echo
     tput bold
     tput setaf 3
     echo Current Exim Queue Size: $(exim -bpc)
-    let count=count-1
-    SEPARATOR
-    sleep 2
+    if [ $(exim -bpc) -gt 0 ]; then
+        let queuecheck=queuecheck+1
+        let count=count-1
+        SEPARATOR
+        sleep 2
+    else
+        let count=count-1
+        SEPARATOR
+        sleep 2
+    fi
 done
-QUEUE=$(exim -bpc)
-if [ $QUEUE = 0 ]; then
+if [ $queuecheck -gt 2 ]; then
     echo
     tput bold
-    tput setaf 2
-    echo Exim Queue appears to be stable, no further action is required
+    tput setaf 1
+    echo Exim Queue grew immediately.  Futher SPAM inspection/cleanup is required.
     SEPARATOR
     tput sgr0
     exit 0
 else
     echo
     tput bold
-    tput setaf 1
-    echo Exim Queue grew immediately.  Futher SPAM cleanup is required.
+    tput setaf 2
+    echo Exim Queue appears to be stable, no further action is required
     SEPARATOR
     tput sgr0
     exit 0
