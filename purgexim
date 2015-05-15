@@ -82,6 +82,7 @@ if [ $queuecheck -gt 2 ]; then
     tput sgr0
     echo "The following directories should be checked for SPAM Scripts:"
     echo "-------------------------------------------------------------"
+    echo
     grep cwd /var/log/exim_mainlog | grep "$today" | grep -v /var/spool | awk -F"cwd=" '{print $2}' | awk '{print $1}' | sort | uniq -c | sort -n | tail -5
     printf "\n\n\n"
     echo "The following Exim Log Entries should be checked as well, they may indicate compromised account passwords:"
