@@ -54,6 +54,7 @@ sleep 3
 SEPARATOR
 count=10
 queuecheck=0
+today="$(tail -1 /var/log/exim_mainlog | awk '{print $1}')"
 while [ $count -gt 0 ]; do
     echo
     tput bold
@@ -75,6 +76,19 @@ if [ $queuecheck -gt 2 ]; then
     tput bold
     tput setaf 1
     echo Exim Queue grew immediately.  Futher SPAM inspection/cleanup is required.
+    echo
+    echo "Checking possible SPAM Script Directories..."
+    printf "\n\n"
+    tput sgr0
+    echo "The following directories should be checked for SPAM Scripts:"
+    echo "-------------------------------------------------------------"
+    grep cwd /var/log/exim_mainlog | grep "$today" | grep -v /var/spool | awk -F"cwd=" '{print $2}' | awk '{print $1}' | sort | uniq -c | sort -n | tail -5
+    printf "\n\n\n"
+    echo "The following Exim Log Entries should be checked as well, they may indicate compromised account passwords:"
+    echo "----------------------------------------------------------------------------------------------------------"
+    mkdir -p /root/support
+    exim -bp | awk '{print $3}' >> /root/support/mailids_$(date +"%T_%m-%d-%Y")
+    for id in $(cat /root/support/mailids_*); do printf "\n" && grep $id /var/log/exim_mainlog && printf "\n\n"; done
     SEPARATOR
     tput sgr0
     exit 0
@@ -82,7 +96,7 @@ else
     echo
     tput bold
     tput setaf 2
-    echo Exim Queue appears to be stable, no further action is required
+    echo The Exim Queue appears to be stable, no further action is needed.
     SEPARATOR
     tput sgr0
     exit 0
