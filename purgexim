@@ -30,20 +30,21 @@ function clearline {
 }
 
 clear
+SEPARATOR
 GREEN
 echo Stopping Exim...
-sleep 1
+echo
 tput sgr0
 service exim stop &&
 SEPARATOR
 GREEN
 echo Moving Exim Queue Out of Exim...
-sleep 1
+echo
 mv /var/spool/exim /var/spool/exim.bak &&
 SEPARATOR
 GREEN
 echo Restarting Exim...
-sleep 1
+echo
 tput sgr0
 service exim start &&
 SEPARATOR
@@ -62,10 +63,14 @@ echo
 YELLOW
 echo Checking for immediate Exim Queue buildup
 sleep 1
-echo \(Immediate buildup may indicate further SPAM cleaup is required\)
+printf "\(Immediate buildup may indicate further "
+RED
+printf "SPAM"
+YELLOW
+printf " cleaup is required\)"
 sleep 3
 SEPARATOR
-count=10
+count=20
 queuecheck=0
 today="$(tail -1 /var/log/exim_mainlog | awk '{print $1}')"
 while [ $count -gt 0 ]; do
