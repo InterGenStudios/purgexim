@@ -3,39 +3,51 @@
 # Intergen 4/12/15
 # ---------------------------------------------------------------
 
+function RED {
+    tput bold
+    tput setaf 1
+}
+function GREEN {
+    tput bold
+    tput setaf 2
+}
+function YELLOW {
+    tput bold
+    tput setaf 3
+}
+function BLUE {
+    tput bold
+    tput setaf 4
+}
 function SEPARATOR {
-echo
-tput bold
-tput setaf 4
-echo  --------------------------------
-echo
+    echo
+    BLUE
+    echo  --------------------------------
+    echo
 }
 function clearline {
-        tput cuu 1 && tput el
+    tput cuu 1 && tput el
 }
+
 clear
-tput bold
-tput setaf 2
+GREEN
 echo Stopping Exim...
 sleep 1
 tput sgr0
 service exim stop &&
 SEPARATOR
-tput bold
-tput setaf 2
+GREEN
 echo Moving Exim Queue Out of Exim...
 sleep 1
 mv /var/spool/exim /var/spool/exim.bak &&
 SEPARATOR
-tput bold
-tput setaf 2
+GREEN
 echo Restarting Exim...
 sleep 1
 tput sgr0
 service exim start &&
 SEPARATOR
-tput bold
-tput setaf 3
+YELLOW
 echo Purging Exim Queue
 sleep 1
 echo
@@ -43,13 +55,11 @@ echo This may take awhile...
 sleep 1
 rm -rf /var/spool/exim &&
 SEPARATOR
-tput bold
-tput setaf 2
+GREEN
 echo Exim Queue Purge Complete
 sleep 2
 echo
-tput bold
-tput setaf 3
+YELLOW
 echo Checking for immediate Exim Queue buildup
 sleep 1
 echo \(Immediate buildup may indicate further SPAM cleaup is required\)
@@ -60,8 +70,7 @@ queuecheck=0
 today="$(tail -1 /var/log/exim_mainlog | awk '{print $1}')"
 while [ $count -gt 0 ]; do
     echo
-    tput bold
-    tput setaf 3
+    YELLOW
     echo Current Exim Queue Size: $(exim -bpc)
     if [ $(exim -bpc) -gt 0 ]; then
         let queuecheck=queuecheck+1
@@ -82,8 +91,7 @@ while [ $count -gt 0 ]; do
 done
 if [ $queuecheck -gt 2 ]; then
     echo
-    tput bold
-    tput setaf 1
+    RED
     echo Exim Queue grew immediately.  Futher SPAM inspection/cleanup is required.
     echo
     echo "Checking possible SPAM Script Directories..."
@@ -104,8 +112,7 @@ if [ $queuecheck -gt 2 ]; then
     exit 0
 else
     echo
-    tput bold
-    tput setaf 2
+    GREEN
     echo The Exim Queue appears to be stable, no further action is needed.
     SEPARATOR
     tput sgr0
