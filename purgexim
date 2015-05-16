@@ -10,6 +10,9 @@ tput setaf 4
 echo  --------------------------------
 echo
 }
+function clearline {
+        tput cuu 1 && tput el
+}
 clear
 tput bold
 tput setaf 2
@@ -63,11 +66,17 @@ while [ $count -gt 0 ]; do
     if [ $(exim -bpc) -gt 0 ]; then
         let queuecheck=queuecheck+1
         let count=count-1
+        echo
+        echo "Exim Queue checks remaining: $count"
         SEPARATOR
+        clearline
         sleep 2
     else
         let count=count-1
+        echo
+        echo "Exim Queue checks remaining: $count"
         SEPARATOR
+        clearline
         sleep 2
     fi
 done
