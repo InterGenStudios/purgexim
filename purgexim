@@ -39,7 +39,6 @@ service exim stop &&
 SEPARATOR
 GREEN
 echo Moving Exim Queue Out of Exim...
-echo
 mv /var/spool/exim /var/spool/exim.bak &&
 SEPARATOR
 GREEN
@@ -63,14 +62,14 @@ echo
 YELLOW
 echo Checking for immediate Exim Queue buildup
 sleep 1
-printf "\(Immediate buildup may indicate further "
+printf "(Immediate buildup may indicate further "
 RED
 printf "SPAM"
 YELLOW
-printf " cleaup is required\)"
+printf " cleaup is required)"
 sleep 3
 SEPARATOR
-count=20
+count=10
 queuecheck=0
 today="$(tail -1 /var/log/exim_mainlog | awk '{print $1}')"
 while [ $count -gt 0 ]; do
