@@ -68,7 +68,7 @@ printf "(Immediate buildup may indicate further "
 RED
 printf "SPAM"
 tput sgr0
-printf " cleaup is required)"
+printf " cleanup is required)"
 sleep 3
 SEPARATOR
 count=10
