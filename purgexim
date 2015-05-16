@@ -54,6 +54,7 @@ echo
 echo This may take awhile...
 sleep 1
 rm -rf /var/spool/exim.bak &&
+clear
 SEPARATOR
 GREEN
 echo Exim Queue Purge Complete
@@ -62,10 +63,11 @@ echo
 YELLOW
 echo Checking for immediate Exim Queue buildup
 sleep 1
+tput sgr0
 printf "(Immediate buildup may indicate further "
 RED
 printf "SPAM"
-YELLOW
+tput sgr0
 printf " cleaup is required)"
 sleep 3
 SEPARATOR
