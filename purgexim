@@ -120,11 +120,11 @@ CLEARLINE () {
 # Creates uniform look during script execution when called after any clear command
 HEADER () {
 echo
-GREEN
+BLUE
 echo "============================================================================"
 WHITE
 echo "  purgexim v$vers"
-GREEN
+BLUE
 echo "============================================================================"
 WHITE
 printf "\n\n"
