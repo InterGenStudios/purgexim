@@ -1,79 +1,137 @@
 #!/bin/bash
-# purgexim - Simple cPanel server script to remove the exim queue
-# Intergen 4/12/15
-# ---------------------------------------------------------------
+# -------------------------------------------------------------------------------------------
+# purgexim: Simple cPanel server script to purge the Exim queue and re-check for SPAM buildup
+# purgexim Version: 1.1
+# Github: https://github.com/InterGenStudios/purgexim
+# ---------------------------------------------------
+# InterGenStudios: 4-12-15
+# Copyright (c) 2015: Christopher 'InterGen' Cork  InterGenStudios
+# URL: https://intergenstudios.com
+# --------------------------------
+# License: GPL-2.0+
+# URL: http://opensource.org/licenses/gpl-license.php
+# ---------------------------------------------------
+# purgexim is free software:
+# You may redistribute it and/or modify it under the terms of the
+# GNU General Public License as published by the Free Software
+# Foundation, either version 2 of the License, or (at your discretion)
+# any later version.
+# ------------------
 
-function RED {
+#############################################
+##-----------------------------------------##
+## BEGIN - MAKE SURE WE'RE RUNNING AS ROOT ##
+##-----------------------------------------##
+#############################################
+
+if [ "$(id -u)" != "0" ]; then
+    tput bold
+    tput setaf 1
+    printf "\n\n"
+    echo "--------"
+    echo "WARNING!"
+    echo "--------"
+    echo
+    tput sgr0
+    echo "purgexim must be run as root!"
+    echo "(Exiting now...)"
+    printf "\n\n"
+    exit 1
+fi
+
+###########################################
+##---------------------------------------##
+## END - MAKE SURE WE'RE RUNNING AS ROOT ##
+##---------------------------------------##
+###########################################
+
+###########################################
+##---------------------------------------##
+## BEGIN - INITIAL VARIABLE DECLARATIONS ##
+##---------------------------------------##
+###########################################
+
+# Sets countdown for queue buildup check
+count=10
+
+# Sets counter for queue buildup check
+queuecheck=0
+
+# Sets grep flag for spam source checking if buildup occurs
+today="$(tail -1 /var/log/exim_mainlog | awk '{print $1}')"
+
+# Sets purgexim version number
+vers=1.1
+
+#########################################
+##-------------------------------------##
+## END - INITIAL VARIABLE DECLARATIONS ##
+##-------------------------------------##
+#########################################
+
+#######################
+##-------------------##
+## BEGIN - FUNCTIONS ##
+##-------------------##
+#######################
+
+# Colors trailing text Red
+RED () {
     tput bold
     tput setaf 1
 }
-function GREEN {
+
+# Colors trailing text Green
+GREEN () {
     tput bold
     tput setaf 2
 }
-function YELLOW {
+
+# Colors trailing text Yellow
+YELLOW () {
     tput bold
     tput setaf 3
 }
-function BLUE {
+
+# Colors trailing text Blue
+BLUE () {
     tput bold
     tput setaf 4
 }
-function SEPARATOR {
+
+# Clears any preceding text color declarations
+WHITE () {
+tput sgr0
+}
+
+# Simple divider
+SEPARATOR () {
     echo
     BLUE
     echo  --------------------------------
     echo
 }
-function clearline {
+
+# Clears 7 lines when called
+CLEARLINE () {
     tput cuu 7 && tput el
 }
 
-clear
-SEPARATOR
-GREEN
-echo Stopping Exim...
+# Creates uniform look during script execution when called after any clear command
+HEADER () {
 echo
-tput sgr0
-service exim stop &&
-SEPARATOR
 GREEN
-echo Moving Exim Queue Out of Exim...
-mv /var/spool/exim /var/spool/exim.bak &&
-SEPARATOR
+echo "============================================================================"
+WHITE
+echo "  purgexim v$vers"
 GREEN
-echo Restarting Exim...
-echo
-tput sgr0
-service exim start &&
-SEPARATOR
-YELLOW
-echo Purging Exim Queue
-sleep 1
-echo
-echo This may take awhile...
-sleep 1
-rm -rf /var/spool/exim.bak &&
-clear
-SEPARATOR
-GREEN
-echo Exim Queue Purge Complete
-sleep 2
-echo
-YELLOW
-echo Checking for immediate Exim Queue buildup
-sleep 1
-tput sgr0
-printf "(Immediate buildup may indicate further "
-RED
-printf "SPAM"
-tput sgr0
-printf " cleanup is required)"
-sleep 3
-SEPARATOR
-count=10
-queuecheck=0
-today="$(tail -1 /var/log/exim_mainlog | awk '{print $1}')"
+echo "============================================================================"
+WHITE
+printf "\n\n"
+}
+
+# Checks for emails entering the queue within 20 seconds after purge and sets flag for check outcome
+QUEUE_CHECK () {
 while [ $count -gt 0 ]; do
     echo
     YELLOW
@@ -84,17 +142,21 @@ while [ $count -gt 0 ]; do
         echo
         echo "Exim Queue checks remaining: $count"
         SEPARATOR
-        clearline
+        CLEARLINE
         sleep 2
     else
         let count=count-1
         echo
         echo "Exim Queue checks remaining: $count"
         SEPARATOR
-        clearline
+        CLEARLINE
         sleep 2
     fi
 done
+}
+
+# Gives areas to check for spam if buildup is detected, or exits cleanly
+QUEUE_CHECK_OUTCOME () {
 if [ $queuecheck -gt 2 ]; then
     echo
     RED
@@ -115,7 +177,7 @@ if [ $queuecheck -gt 2 ]; then
     for id in $(cat /root/support/mailids_*); do printf "\n" && grep $id /var/log/exim_mainlog && printf "\n\n"; done
     SEPARATOR
     tput sgr0
-    exit 0
+    exit 1
 else
     echo
     GREEN
@@ -124,3 +186,73 @@ else
     tput sgr0
     exit 0
 fi
+}
+
+#####################
+##-----------------##
+## END - FUNCTIONS ##
+##-----------------##
+#####################
+
+#########################
+##---------------------##
+## BEGIN - CORE SCRIPT ##
+##---------------------##
+#########################
+
+clear
+HEADER
+GREEN
+echo Stopping Exim...
+echo
+WHITE
+service exim stop &&
+sleep 1
+clear
+HEADER
+GREEN
+echo Moving Exim Queue Out of Exim...
+mv /var/spool/exim /var/spool/exim.bak &&
+sleep 1
+clear
+HEADER
+GREEN
+echo Restarting Exim...
+echo
+WHITE
+service exim start &&
+sleep 1
+clear
+HEADER
+YELLOW
+echo Purging Exim Queue
+sleep 1
+echo
+echo This might take a moment...
+sleep 1
+rm -rf /var/spool/exim.bak &&
+clear
+HEADER
+GREEN
+echo Exim Queue Purge Complete
+sleep 2
+echo
+YELLOW
+echo Checking for immediate Exim Queue buildup
+sleep 1
+WHITE
+printf "(Immediate buildup may indicate further "
+RED
+printf "SPAM"
+WHITE
+printf " cleanup is required)"
+sleep 3
+SEPARATOR
+QUEUE_CHECK
+QUEUE_CHECK_OUTCOME
+
+#######################
+##-------------------##
+## END - CORE SCRIPT ##
+##-------------------##
+#######################
